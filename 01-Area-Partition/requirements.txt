@@ -1,0 +1,8 @@
+"""Runtime dependencies for SheetCuts.
+
+Current: Zero external runtime dependencies (pure Python stdlib)
+Future: May add numpy/scipy in Phase 2 if performance optimization needed.
+"""
+
+# Currently empty - SheetCuts uses only Python stdlib in v1.0
+# This file is provided for future extensibility

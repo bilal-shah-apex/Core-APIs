@@ -1,0 +1,22 @@
+"""Development dependencies for SheetCuts.
+
+Includes: testing, documentation, linting, type checking.
+"""
+
+# Testing
+pytest>=7.0
+pytest-cov>=4.0
+
+# Documentation
+sphinx>=5.0
+sphinx-rtd-theme>=1.0
+sphinx-autodoc-typehints>=1.15
+
+# Code Quality
+black>=22.0
+flake8>=4.0
+mypy>=0.950
+
+# Optional: Optimization libraries (Phase 2+)
+# numpy>=1.20
+# scipy>=1.6
