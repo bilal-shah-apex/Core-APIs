@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SheetCuts Manual GUI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>SheetCuts Manual Testing GUI</h1>
+      <p>Enter sheet dimensions and cutting pieces, then submit to exercise the SheetCuts core API.</p>
+    </header>
+
+    <section class="panel">
+      <h2>Sheet Configuration</h2>
+      <div class="grid two-col">
+        <label>
+          Width
+          <input id="sheet-width" type="number" step="0.01" min="0.01" value="48" />
+        </label>
+        <label>
+          Height
+          <input id="sheet-height" type="number" step="0.01" min="0.01" value="96" />
+        </label>
+        <label>
+          Units
+          <select id="sheet-units">
+            <option value="inches">inches</option>
+            <option value="millimeters">millimeters</option>
+          </select>
+        </label>
+        <label>
+          Sheet type
+          <select id="sheet-type">
+            <option value="homogenous">homogenous</option>
+            <option value="directional">directional</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Cutting Pieces</h2>
+        <div class="button-group">
+          <button id="add-piece" type="button">Add piece</button>
+          <button id="remove-piece" type="button">Remove piece</button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Label</th>
+            <th>Width</th>
+            <th>Height</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody id="piece-rows"></tbody>
+      </table>
+    </section>
+
+    <section class="panel actions">
+      <button id="submit-button" type="button">Optimize</button>
+      <div id="error-message" class="error-message"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Response</h2>
+      <div class="output-grid">
+        <div>
+          <h3>JSON Result</h3>
+          <pre id="json-output">{}</pre>
+        </div>
+        <div>
+          <h3>Diagram</h3>
+          <iframe id="diagram-frame" title="Layout diagram" sandbox="allow-same-origin allow-scripts"></iframe>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/static/main.js"></script>
+</body>
+</html>

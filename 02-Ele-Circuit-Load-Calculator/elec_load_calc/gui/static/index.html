@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Electrical Circuit Load Tester</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; background: #f7f7f7; }
+      .panel { background: white; padding: 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); margin-bottom: 16px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      label { display: block; margin-top: 8px; font-weight: 600; }
+      input, select, button { width: 100%; padding: 8px; margin-top: 4px; }
+      button { cursor: pointer; background: #2563eb; color: white; border: none; border-radius: 4px; }
+      .diagram { border: 1px solid #ddd; background: #fff; padding: 12px; border-radius: 8px; }
+      .load-pill { display: inline-block; margin: 6px 6px 0 0; padding: 6px 8px; background: #e0f2fe; border-radius: 999px; }
+      pre { background: #111827; color: #f9fafb; padding: 12px; border-radius: 6px; overflow: auto; }
+      .diagram-shell { display: flex; flex-direction: column; gap: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Electrical Circuit Load Tester</h1>
+    <div class="grid">
+      <div class="panel">
+        <h2>Inputs</h2>
+        <label>Circuit Name</label>
+        <input id="circuitName" value="Bedroom Circuit" />
+        <label>Voltage (V)</label>
+        <input id="voltage" type="number" value="240" />
+        <label>Tolerance (%)</label>
+        <input id="tolerance" type="number" value="10" />
+
+        <h3>Appliances</h3>
+        <div id="loadInputs"></div>
+        <button id="addLoad">Add Appliance</button>
+        <button id="calculate" style="margin-top:8px;">Calculate</button>
+      </div>
+
+      <div class="panel">
+        <h2>Output</h2>
+        <pre id="output">{}</pre>
+        <div class="diagram" id="diagram"></div>
+      </div>
+    </div>
+
+    <script>
+      const loadInputs = document.getElementById('loadInputs');
+      const output = document.getElementById('output');
+      const diagram = document.getElementById('diagram');
+
+      const defaultLoads = [
+        { name: 'Ceiling Light', power_watts: 9, quantity: 8 },
+        { name: 'Ceiling Fan', power_watts: 75, quantity: 1 },
+      ];
+
+      function renderLoads() {
+        loadInputs.innerHTML = '';
+        defaultLoads.forEach((load, index) => {
+          const row = document.createElement('div');
+          row.innerHTML = `
+            <div style="margin-top:10px; padding:8px; border:1px solid #ddd; border-radius:6px;">
+              <label>Name</label>
+              <input class="load-name" value="${load.name}" />
+              <label>Power (W)</label>
+              <input class="load-power" type="number" value="${load.power_watts}" />
+              <label>Quantity</label>
+              <input class="load-qty" type="number" value="${load.quantity}" />
+            </div>`;
+          loadInputs.appendChild(row);
+        });
+      }
+
+      document.getElementById('addLoad').onclick = () => {
+        defaultLoads.push({ name: 'New Load', power_watts: 100, quantity: 1 });
+        renderLoads();
+      };
+
+      function collectLoads() {
+        return Array.from(loadInputs.querySelectorAll('div > div')).map((card) => ({
+          name: card.querySelector('.load-name').value,
+          power_watts: Number(card.querySelector('.load-power').value),
+          quantity: Number(card.querySelector('.load-qty').value),
+        }));
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function renderSchematic(summary, loads) {
+        const breakerSize = summary.recommended_breaker_a || 'N/A';
+        const loadMarkup = loads.map((load, index) => {
+          const y = 200 + index * 42;
+          return `
+            <g>
+              <rect x="430" y="${y}" width="228" height="32" rx="8" fill="#e0f2fe" stroke="#0284c7" />
+              <circle cx="415" cy="${y + 16}" r="8" fill="#0f766e" />
+              <line x1="365" y1="${y + 16}" x2="407" y2="${y + 16}" stroke="#64748b" stroke-width="2" />
+              <text x="442" y="${y + 21}" font-size="12">${escapeHtml(load.name)} · ${load.quantity}×${load.power_watts}W</text>
+            </g>`;
+        }).join('');
+
+        diagram.innerHTML = `
+          <div class="diagram-shell">
+            <svg width="100%" viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg">
+              <rect x="20" y="70" width="240" height="120" rx="12" fill="#fef3c7" stroke="#92400e" />
+              <text x="40" y="102" font-size="16" font-weight="700">Breaker Panel</text>
+              <text x="40" y="128" font-size="22" font-weight="700">${breakerSize}A</text>
+              <text x="40" y="152" font-size="13">Recommended breaker</text>
+
+              <line x1="260" y1="130" x2="330" y2="130" stroke="#64748b" stroke-width="3" />
+
+              <rect x="330" y="70" width="240" height="120" rx="12" fill="#dcfce7" stroke="#15803d" />
+              <text x="350" y="102" font-size="16" font-weight="700">Area / Circuit</text>
+              <text x="350" y="128" font-size="18" font-weight="700">${escapeHtml(summary.circuit_name || 'Circuit')}</text>
+              <text x="350" y="152" font-size="13">Load ${summary.total_load_watts || 0}W · ${summary.estimated_current_a || 0}A</text>
+
+              <line x1="570" y1="130" x2="630" y2="130" stroke="#64748b" stroke-width="3" />
+              <text x="430" y="196" font-size="14" font-weight="700">Connected Loads</text>
+              ${loadMarkup}
+            </svg>
+            <div style="font-size:12px; color:#475569;">Circuit summary: ${escapeHtml(summary.circuit_name || 'Circuit')} • ${summary.total_load_watts || 0}W • ${summary.estimated_current_a || 0}A</div>
+          </div>`;
+      }
+
+      document.getElementById('calculate').onclick = async () => {
+        const payload = {
+          circuit: {
+            name: document.getElementById('circuitName').value,
+            voltage: Number(document.getElementById('voltage').value),
+            voltage_tolerance_percent: Number(document.getElementById('tolerance').value),
+          },
+          loads: collectLoads(),
+        };
+
+        const response = await fetch('/api/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        output.textContent = JSON.stringify(result, null, 2);
+
+        const summary = result.summary || {};
+        const loads = collectLoads();
+        if (!result.success) {
+          diagram.innerHTML = '<div style="color:#b91c1c; font-weight:600;">Calculation failed. Review the JSON output above.</div>';
+          return;
+        }
+
+        renderSchematic(summary, loads);
+      };
+
+      renderLoads();
+    </script>
+  </body>
+</html>
